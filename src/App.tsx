@@ -1,47 +1,34 @@
-import React, { useState } from "react";
-import MyModal from "./MyModal";
+import { useState } from "react";
+import Modal from "react-modal";
 import MyMarkdown from "./MyMarkdown";
+import RenderMarkdown from "./RenderMarkdown";
 
 const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editedText, setEditedText] = useState("");
+  const [paragraphText, setParagraphText] = useState("Initial paragraph text");
 
-  const handleEditButtonClick = () => {
+  const openModal = () => {
     setIsModalOpen(true);
   };
 
-  const handleModalClose = () => {
+  const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  const handleSaveText = (text: string) => {
-    setEditedText(text);
-    setIsModalOpen(false);
+  const handleSave = (editedText: string) => {
+    setParagraphText(editedText);
+    closeModal();
   };
 
   return (
     <div>
       <h1>App</h1>
-      {editedText ? (
-        <div>
-          <MyMarkdown initialText={editedText} onSave={handleSaveText} />
-        </div>
-      ) : (
-        <textarea
-          placeholder="Enter your Markdown text..."
-          rows={10}
-          cols={30}
-          readOnly
-        />
-      )}
+      <RenderMarkdown text={paragraphText} lineSpacing={1} />
+      <button onClick={openModal}>Edit</button>
 
-      <button onClick={handleEditButtonClick}>Edit</button>
-
-      {isModalOpen && (
-        <MyModal isOpen={isModalOpen} onRequestClose={handleModalClose}>
-          <MyMarkdown initialText={editedText} onSave={handleSaveText} />
-        </MyModal>
-      )}
+      <Modal isOpen={isModalOpen} onRequestClose={closeModal}>
+        <MyMarkdown initialText={paragraphText} onSave={handleSave} />
+      </Modal>
     </div>
   );
 };

@@ -1,49 +1,16 @@
-import { useState, useRef, ChangeEvent, useEffect } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import "./my.css";
+import RenderMarkdown from "./RenderMarkdown";
 
 interface MyMarkdownProps {
-  initialText: string;
   onSave: (text: string) => void;
 }
 
-const MyMarkdown = ({ initialText, onSave }: MyMarkdownProps) => {
-  const [text, setText] = useState<string>(initialText);
+const MyMarkdown = ({ onSave }: MyMarkdownProps) => {
+  const [text, setText] = useState<string>("");
   const [lineSpacing, setLineSpacing] = useState<number>(1);
   const [previousText, setPreviousText] = useState<string>("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    setText(initialText);
-  }, [initialText]);
-
-  const renderMarkdown = (text: string) => {
-    const lines = text.split("\n");
-    const renderedLines = lines.map((line, index) => {
-      if (line.startsWith("## ")) {
-        return <h2 key={index}>{line.substring(3)}</h2>;
-      } else {
-        const boldRegEx = /\*\*(.*?)\*\*/g;
-        const italicRegEx = /\*(.*?)\*/g;
-
-        let html = line.replace(boldRegEx, "<strong>$1</strong>");
-        html = html.replace(italicRegEx, "<em>$1</em>");
-
-        const lineStyle = {
-          lineHeight: `${lineSpacing}rem`,
-        };
-
-        return (
-          <p
-            key={index}
-            style={lineStyle}
-            dangerouslySetInnerHTML={{ __html: html }}
-          ></p>
-        );
-      }
-    });
-
-    return renderedLines;
-  };
 
   const insertMarkdown = (action: string) => {
     if (textAreaRef.current) {
@@ -126,7 +93,11 @@ const MyMarkdown = ({ initialText, onSave }: MyMarkdownProps) => {
           value={text}
           onChange={handleTextChange}
         />
-        <div className="preview">{renderMarkdown(text)}</div>
+        <RenderMarkdown
+          text={text}
+          lineSpacing={lineSpacing}
+          className="preview"
+        />
         <button onClick={() => onSave(text)}>Save</button>
       </article>
     </main>
