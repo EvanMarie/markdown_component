@@ -3,10 +3,11 @@ import "./my.css";
 import RenderMarkdown from "./RenderMarkdown";
 
 interface MyMarkdownProps {
+  initialText: string;
   onSave: (text: string) => void;
 }
 
-const MyMarkdown = ({ onSave }: MyMarkdownProps) => {
+const MyMarkdown = ({ initialText, onSave }: MyMarkdownProps) => {
   const [text, setText] = useState<string>("");
   const [lineSpacing, setLineSpacing] = useState<number>(1);
   const [previousText, setPreviousText] = useState<string>("");
@@ -90,7 +91,7 @@ const MyMarkdown = ({ onSave }: MyMarkdownProps) => {
           style={{ width: "100%" }}
           cols={30}
           rows={10}
-          value={text}
+          value={initialText}
           onChange={handleTextChange}
         />
         <RenderMarkdown
