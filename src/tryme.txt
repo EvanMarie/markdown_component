@@ -1,0 +1,9 @@
+This is normal
+# This is one hash
+## This is two hashes
+### This is three hashes
+#### This is four hashes
+##### This is five hashes
+
+*This is one asterisk
+**This is two asterisks

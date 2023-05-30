@@ -1,0 +1,16 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #d7e3fa;
+    font-family: Arial, Helvetica, sans-serif
+}
+
+.main_container {
+    margin: 20px;
+}
+
+.markdown_textarea {
+    width: 100%;
+}
