@@ -1,10 +1,20 @@
-import { useState, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent, useEffect } from "react";
 import "./my.css";
 
-const MarkdownEditor2 = () => {
-  const [text, setText] = useState<string>("");
+interface MyMarkdownProps {
+  initialText: string;
+  onSave: (text: string) => void;
+}
+
+const MyMarkdown = ({ initialText, onSave }: MyMarkdownProps) => {
+  const [text, setText] = useState<string>(initialText);
   const [lineSpacing, setLineSpacing] = useState<number>(1);
+  const [previousText, setPreviousText] = useState<string>("");
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setText(initialText);
+  }, [initialText]);
 
   const renderMarkdown = (text: string) => {
     const lines = text.split("\n");
@@ -52,6 +62,10 @@ const MarkdownEditor2 = () => {
           startSymbol = "## ";
           endSymbol = "";
           break;
+        case "link":
+          startSymbol = '<a href="http://www.';
+          endSymbol = '">Selected Text</a>';
+          break;
         default:
           startSymbol = endSymbol = "";
       }
@@ -67,12 +81,25 @@ const MarkdownEditor2 = () => {
     }
   };
 
-  const changeLineSpacing = (spacing: number) => {
-    setLineSpacing(spacing);
+  const increaseLineSpacing = () => {
+    setLineSpacing(lineSpacing + 0.1);
+  };
+
+  const decreaseLineSpacing = () => {
+    setLineSpacing(Math.max(lineSpacing - 0.1, 0.1));
   };
 
   const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    setText(e.target.value);
+    setTextWithUndo(e.target.value);
+  };
+
+  const setTextWithUndo = (newText: string) => {
+    setPreviousText(text);
+    setText(newText);
+  };
+
+  const handleUndo = () => {
+    setText(previousText);
   };
 
   return (
@@ -83,9 +110,11 @@ const MarkdownEditor2 = () => {
         <button onClick={() => insertMarkdown("h2")}>Heading</button>
         <button onClick={() => insertMarkdown("bold")}>Bold</button>
         <button onClick={() => insertMarkdown("italic")}>Italic</button>
-        <button onClick={() => changeLineSpacing(1)}>Line Spacing 1</button>
-        <button onClick={() => changeLineSpacing(1.5)}>Line Spacing 1.5</button>
-        <button onClick={() => changeLineSpacing(2)}>Line Spacing 2</button>
+        <button onClick={() => insertMarkdown("link")}>Add Link</button>
+        <span>Line Spacing: </span>
+        <button onClick={increaseLineSpacing}>+</button>
+        <button onClick={decreaseLineSpacing}>-</button>
+        <button onClick={handleUndo}>Undo</button>
         <textarea
           ref={textAreaRef}
           className="markdown_textarea"
@@ -98,9 +127,10 @@ const MarkdownEditor2 = () => {
           onChange={handleTextChange}
         />
         <div className="preview">{renderMarkdown(text)}</div>
+        <button onClick={() => onSave(text)}>Save</button>
       </article>
     </main>
   );
 };
 
-export default MarkdownEditor2;
+export default MyMarkdown;

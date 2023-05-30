@@ -1,14 +1,48 @@
-import MarkdownEditor from "./Mardown";
-import MarkdownEditor2 from "./Markdown2";
-import MarkdownEditor3 from "./Markdown3";
+import React, { useState } from "react";
+import MyModal from "./MyModal";
+import MyMarkdown from "./MyMarkdown";
 
 const App = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editedText, setEditedText] = useState("");
+
+  const handleEditButtonClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSaveText = (text: string) => {
+    setEditedText(text);
+    setIsModalOpen(false);
+  };
+
   return (
-    <>
-      <MarkdownEditor />
-      <MarkdownEditor2 />
-      {/* <MarkdownEditor3 /> */}
-    </>
+    <div>
+      <h1>App</h1>
+      {editedText ? (
+        <div>
+          <MyMarkdown initialText={editedText} onSave={handleSaveText} />
+        </div>
+      ) : (
+        <textarea
+          placeholder="Enter your Markdown text..."
+          rows={10}
+          cols={30}
+          readOnly
+        />
+      )}
+
+      <button onClick={handleEditButtonClick}>Edit</button>
+
+      {isModalOpen && (
+        <MyModal isOpen={isModalOpen} onRequestClose={handleModalClose}>
+          <MyMarkdown initialText={editedText} onSave={handleSaveText} />
+        </MyModal>
+      )}
+    </div>
   );
 };
 

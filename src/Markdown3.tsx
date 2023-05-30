@@ -1,25 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import "./my.css";
 
-const MarkdownEditor3 = () => {
-  const [text, setText] = useState("");
-  const contentEditableDiv = useRef<HTMLDivElement>(null);
+const MarkdownEditor2 = () => {
+  const [text, setText] = useState<string>("");
+  const [lineSpacing, setLineSpacing] = useState<number>(1);
+  const [previousText, setPreviousText] = useState<string>("");
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const renderMarkdown = (text: string) => {
     const lines = text.split("\n");
     const renderedLines = lines.map((line, index) => {
-      if (line.startsWith("# ")) {
-        return `<h1>${line.substring(2)}</h1>`;
-      } else if (line.startsWith("## ")) {
-        return `<h2>${line.substring(3)}</h2>`;
-      } else if (line.startsWith("### ")) {
-        return `<h3>${line.substring(4)}</h3>`;
-      } else if (line.startsWith("#### ")) {
-        return `<h4>${line.substring(5)}</h4>`;
-      } else if (line.startsWith("##### ")) {
-        return `<h5>${line.substring(6)}</h5>`;
-      } else if (line.startsWith("###### ")) {
-        return `<h6>${line.substring(7)}</h6>`;
+      if (line.startsWith("## ")) {
+        return <h2 key={index}>{line.substring(3)}</h2>;
       } else {
         const boldRegEx = /\*\*(.*?)\*\*/g;
         const italicRegEx = /\*(.*?)\*/g;
@@ -27,90 +19,107 @@ const MarkdownEditor3 = () => {
         let html = line.replace(boldRegEx, "<strong>$1</strong>");
         html = html.replace(italicRegEx, "<em>$1</em>");
 
-        return `<p>${html}</p>`;
+        const lineStyle = {
+          lineHeight: `${lineSpacing}rem`,
+        };
+
+        return (
+          <p
+            key={index}
+            style={lineStyle}
+            dangerouslySetInnerHTML={{ __html: html }}
+          ></p>
+        );
       }
     });
 
     return renderedLines;
   };
 
-  const handleContentEditableChange = (e: React.FormEvent<HTMLDivElement>) => {
-    const text = e.currentTarget.innerText;
-    setText(text);
-    window.requestAnimationFrame(() => {
-      const selection = window.getSelection();
-      const range = document.createRange();
-      if (selection) {
-        range.selectNodeContents(e.currentTarget);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
+  const insertMarkdown = (action: string) => {
+    if (textAreaRef.current) {
+      const { selectionStart, selectionEnd } = textAreaRef.current;
+      let startSymbol, endSymbol;
+
+      // Decide the symbols to add based on the action
+      switch (action) {
+        case "bold":
+          startSymbol = endSymbol = "**";
+          break;
+        case "italic":
+          startSymbol = endSymbol = "*";
+          break;
+        case "h2":
+          startSymbol = "## ";
+          endSymbol = "";
+          break;
+        case "link":
+          startSymbol = '<a href="http://';
+          endSymbol = '">Selected Text</a>';
+          break;
+        default:
+          startSymbol = endSymbol = "";
       }
-    });
+
+      const newText =
+        text.substring(0, selectionStart) +
+        startSymbol +
+        text.substring(selectionStart, selectionEnd) +
+        endSymbol +
+        text.substring(selectionEnd);
+
+      setText(newText);
+    }
   };
 
-  useEffect(() => {
-    if (contentEditableDiv.current) {
-      contentEditableDiv.current.innerHTML = text
-        ? renderMarkdown(text).join("")
-        : "";
-    }
-  }, [text]);
+  const increaseLineSpacing = () => {
+    setLineSpacing(lineSpacing + 0.1);
+  };
 
-  const insertMarkdown = (action: string) => {
-    const selection = window.getSelection();
-    if (!selection) return;
+  const decreaseLineSpacing = () => {
+    setLineSpacing(Math.max(lineSpacing - 0.1, 0.1));
+  };
 
-    const selectedText = selection.toString();
-    let startSymbol, endSymbol;
+  const handleTextChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setTextWithUndo(e.target.value);
+  };
 
-    switch (action) {
-      case "bold":
-        startSymbol = endSymbol = "**";
-        break;
-      case "italic":
-        startSymbol = endSymbol = "*";
-        break;
-      case "h1":
-        startSymbol = "# ";
-        endSymbol = "";
-        break;
-      case "h2":
-        startSymbol = "## ";
-        endSymbol = "";
-        break;
-      case "h3":
-        startSymbol = "### ";
-        endSymbol = "";
-        break;
-      default:
-        startSymbol = endSymbol = "";
-    }
+  const setTextWithUndo = (newText: string) => {
+    setPreviousText(text);
+    setText(newText);
+  };
 
-    const newText = startSymbol + selectedText + endSymbol;
-
-    document.execCommand("insertText", false, newText);
+  const handleUndo = () => {
+    setText(previousText);
   };
 
   return (
     <main className="main_container">
-      <h2>Markdown Editor</h2>
+      <h2>Markdown Editor with Buttons</h2>
       <article>
         <label htmlFor="markdown" />
-        <button onClick={() => insertMarkdown("h1")}>H1</button>
-        <button onClick={() => insertMarkdown("h2")}>H2</button>
-        <button onClick={() => insertMarkdown("h3")}>H3</button>
+        <button onClick={() => insertMarkdown("h2")}>Heading</button>
         <button onClick={() => insertMarkdown("bold")}>Bold</button>
         <button onClick={() => insertMarkdown("italic")}>Italic</button>
-        <div
-          ref={contentEditableDiv}
+        <button onClick={() => insertMarkdown("link")}>Add Link</button>
+        <button onClick={increaseLineSpacing}>+</button>
+        <button onClick={decreaseLineSpacing}>-</button>
+        <button onClick={handleUndo}>Undo</button>
+        <textarea
+          ref={textAreaRef}
           className="markdown_textarea"
-          contentEditable="true"
-          onInput={handleContentEditableChange}
+          name="markdown"
+          id="markdown"
+          style={{ width: "100%" }}
+          cols={30}
+          rows={10}
+          value={text}
+          onChange={handleTextChange}
         />
+        <div className="preview">{renderMarkdown(text)}</div>
       </article>
     </main>
   );
 };
 
-export default MarkdownEditor3;
+export default MarkdownEditor2;
